@@ -41,6 +41,6 @@ func main() {
 	// api/hello — обрабатывает GET-запросы и возвращает приветственное сообщение с текущим значением переменной task.
 	router.HandleFunc("/api/hello", HelloHandler).Methods("GET")
 	// api/task — обрабатывает POST-запросы, принимает JSON с полем task и обновляет глобальную переменную task.
-	router.HandleFunc("/api/tasks", TasksHandler).Methods("POST")
+	router.HandleFunc("/api/task", TasksHandler).Methods("POST")
 	http.ListenAndServe(":8080", router)
 }
