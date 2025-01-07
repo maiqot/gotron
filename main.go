@@ -38,14 +38,9 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Обновление глобальной переменной task
 	task = RequestBody.Task
-	// Формирование JSON-ответа
-	response := responseBody{
-		Message: "Задача успешно обновлена",
-		Task:    task,
-	}
-	// Установка заголовков и отправка JSON-ответа
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+
+	// Возвращаем простой текстовый ответ
+	fmt.Fprintf(w, "Задача обновлена: %s", task)
 }
 
 // main: основная функция, которая инициализирует маршрутизатор, регистрирует обработчики для маршрутов
