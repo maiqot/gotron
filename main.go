@@ -7,12 +7,18 @@ import (
 	"net/http"
 )
 
-// task: глобальная переменная, которая будет хранить текущее значение задачи.
+// глобальная переменная для хранения значения task
 var task string
 
-// RequestBody: структура, которая будет использоваться для декодирования JSON из тела POST-запроса.
-type RequestBody struct {
+// структура для декодирования JSON из тела POST–запроса
+type requestBody struct {
 	Task string `json:"task"`
+}
+
+// структура для формирования JSON-ответа
+type responseBody struct {
+	Message string `json:"message"`
+	Task    string `json:"task"`
 }
 
 // HelloHandler: обработчик для маршрута /api/hello. Он возвращает приветственное сообщение с текущим значением
@@ -23,15 +29,23 @@ func HelloHandler(w http.ResponseWriter, r *http.Request) {
 
 // TaskHandler: обработчик для маршрута /api/task. Он принимает JSON с полем task, обновляет глобальную переменную task
 // и возвращает сообщение об успешном обновлении.
-func TasksHandler(w http.ResponseWriter, r *http.Request) {
-	var RequestBody RequestBody
+func TaskHandler(w http.ResponseWriter, r *http.Request) {
+	var RequestBody requestBody
 	err := json.NewDecoder(r.Body).Decode(&RequestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	// Обновление глобальной переменной task
 	task = RequestBody.Task
-	fmt.Fprintln(w, "Task updated successfully!")
+	// Формирование JSON-ответа
+	response := responseBody{
+		Message: "Задача успешно обновлена",
+		Task:    task,
+	}
+	// Установка заголовков и отправка JSON-ответа
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // main: основная функция, которая инициализирует маршрутизатор, регистрирует обработчики для маршрутов
@@ -41,6 +55,6 @@ func main() {
 	// api/hello — обрабатывает GET-запросы и возвращает приветственное сообщение с текущим значением переменной task.
 	router.HandleFunc("/api/hello", HelloHandler).Methods("GET")
 	// api/task — обрабатывает POST-запросы, принимает JSON с полем task и обновляет глобальную переменную task.
-	router.HandleFunc("/api/task", TasksHandler).Methods("POST")
+	router.HandleFunc("/api/task", TaskHandler).Methods("POST")
 	http.ListenAndServe(":8080", router)
 }
