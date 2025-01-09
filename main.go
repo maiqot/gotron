@@ -21,15 +21,11 @@ type responseBody struct {
 	Task    string `json:"task"`
 }
 
-// HelloHandler: обработчик для маршрута /api/hello. Он возвращает приветственное сообщение с текущим значением
-// переменной task.
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
+func GetMessages(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, %s!", task)
 }
 
-// TaskHandler: обработчик для маршрута /api/task. Он принимает JSON с полем task, обновляет глобальную переменную task
-// и возвращает сообщение об успешном обновлении.
-func TaskHandler(w http.ResponseWriter, r *http.Request) {
+func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	var RequestBody requestBody
 	err := json.NewDecoder(r.Body).Decode(&RequestBody)
 	if err != nil {
@@ -43,13 +39,15 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Задача обновлена: %s", task)
 }
 
-// main: основная функция, которая инициализирует маршрутизатор, регистрирует обработчики для маршрутов
-// и запускает HTTP-сервер на порту 8080.
 func main() {
+	// Вызываем метод InitDB() из файла db.go
+	InitDB()
+
+	// Автоматическая миграция модели Message
+	DB.AutoMigrate(&Message{})
+
 	router := mux.NewRouter()
-	// api/hello — обрабатывает GET-запросы и возвращает приветственное сообщение с текущим значением переменной task.
-	router.HandleFunc("/api/hello", HelloHandler).Methods("GET")
-	// api/task — обрабатывает POST-запросы, принимает JSON с полем task и обновляет глобальную переменную task.
-	router.HandleFunc("/api/task", TaskHandler).Methods("POST")
+	router.HandleFunc("/api/messages", CreateMessage).Methods("POST")
+	router.HandleFunc("/api/messages", GetMessages).Methods("GET")
 	http.ListenAndServe(":8080", router)
 }
