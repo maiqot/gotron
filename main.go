@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
 
@@ -26,18 +25,9 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 	// Извлекаем все записи из базы данных
 	result := DB.Find(&messages)
 	if result.Error != nil {
-		log.Printf("Ошибка при получении сообщений: %v", result.Error)
 		http.Error(w, "Не удалось получить сообщения", http.StatusInternalServerError)
 		return
 	}
-
-	// Если сообщений нет
-	if len(messages) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Нет сообщений"})
-		return
-	}
-
 	// Формируем JSON-ответ
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(messages)
@@ -70,16 +60,9 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Не удалось сохранить сообщение в базе данных", http.StatusInternalServerError)
 		return
 	}
-
-	// Формируем успешный ответ
-	response := responseBody{
-		Message: "Задача создана успешно",
-		Task:    message.Task,
-	}
-
 	// Отправляем JSON-ответ
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(message)
 }
 
 func main() {
