@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 )
 
@@ -22,21 +22,64 @@ type responseBody struct {
 }
 
 func GetMessages(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %s!", task)
+	var messages []Message
+	// Извлекаем все записи из базы данных
+	result := DB.Find(&messages)
+	if result.Error != nil {
+		log.Printf("Ошибка при получении сообщений: %v", result.Error)
+		http.Error(w, "Не удалось получить сообщения", http.StatusInternalServerError)
+		return
+	}
+
+	// Если сообщений нет
+	if len(messages) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Нет сообщений"})
+		return
+	}
+
+	// Формируем JSON-ответ
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(messages)
 }
 
 func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	var RequestBody requestBody
+	// Декодируем JSON из тела запроса в requestBody
 	err := json.NewDecoder(r.Body).Decode(&RequestBody)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Неправильный формат JSON", http.StatusBadRequest)
 		return
 	}
-	// Обновление глобальной переменной task
-	task = RequestBody.Task
 
-	// Возвращаем простой текстовый ответ
-	fmt.Fprintf(w, "Задача обновлена: %s", task)
+	// Проверяем, что task не пустое
+	if RequestBody.Task == "" {
+		http.Error(w, "Поле task не может быть пустым", http.StatusBadRequest)
+		return
+	}
+
+	// Создаем объект Message для сохранения в БД
+	message := Message{
+		Task:   RequestBody.Task, // Передаем поле task из JSON
+		IsDone: false,            // По умолчанию устанавливаем IsDone в false
+	}
+
+	// Сохраняем объект в БД
+	result := DB.Create(&message)
+	if result.Error != nil {
+		http.Error(w, "Не удалось сохранить сообщение в базе данных", http.StatusInternalServerError)
+		return
+	}
+
+	// Формируем успешный ответ
+	response := responseBody{
+		Message: "Задача создана успешно",
+		Task:    message.Task,
+	}
+
+	// Отправляем JSON-ответ
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
