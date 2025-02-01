@@ -94,8 +94,8 @@ func (h *Handler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)                                // Получаем параметры из URL
-	fmt.Println("Полученные переменные из URL:", vars) // Логируем vars
+	vars := mux.Vars(r)
+	fmt.Println("Полученные переменные из URL:", vars)
 
 	idStr, ok := vars["id"]
 	if !ok {
@@ -103,15 +103,15 @@ func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("ID в виде строки:", idStr) // Логируем полученный ID
+	fmt.Println("ID в виде строки:", idStr)
 
-	id, err := strconv.Atoi(idStr) // Преобразуем id в число
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Неверный формат ID", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println("ID после преобразования:", id) // Логируем преобразованный ID
+	fmt.Println("ID после преобразования:", id)
 
 	// Вызываем сервис для удаления задачи
 	err = h.Service.DeleteTaskByID(uint(id))
@@ -120,11 +120,6 @@ func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отправляем JSON-ответ об успешном удалении
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Задача успешно удалена",
-		"id":      vars["id"],
-	})
+	// Отправляем статус 204 No Content (успешное удаление без тела ответа)
+	w.WriteHeader(http.StatusNoContent)
 }
