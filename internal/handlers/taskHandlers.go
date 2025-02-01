@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"firstProject/internal/taskService" // Импортируем наш сервис
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -24,6 +25,7 @@ func (h *Handler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.Service.GetAllTasks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tasks)
@@ -47,43 +49,69 @@ func (h *Handler) PostTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)                 // Получаем параметры из URL
-	id, err := strconv.Atoi(vars["id"]) // Преобразуем id в число
+	vars := mux.Vars(r)                                // Получаем параметры из URL
+	fmt.Println("Полученные переменные из URL:", vars) // Логируем vars
+
+	idStr, ok := vars["id"]
+	if !ok {
+		http.Error(w, "ID не найден в URL", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("ID в виде строки:", idStr) // Логируем полученный ID
+
+	id, err := strconv.Atoi(idStr) // Преобразуем id в число
 	if err != nil {
 		http.Error(w, "Неверный формат ID", http.StatusBadRequest)
 		return
 	}
 
+	fmt.Println("ID после преобразования:", id) // Логируем преобразованный ID
+
+	// Обработка запроса
 	var reqBody struct {
 		Task   string `json:"task,omitempty"`
 		IsDone bool   `json:"is_done,omitempty"`
 	}
 
-	// Декодируем JSON из тела запроса
 	err = json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
 		http.Error(w, "Неверный формат JSON", http.StatusBadRequest)
 		return
 	}
 
-	// Вызываем сервис для обновления задачи
 	updatedTask, err := h.Service.UpdateTaskByID(uint(id), taskService.Task{
 		Task:   reqBody.Task,
 		IsDone: reqBody.IsDone,
 	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// Отправляем ответ клиенту
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedTask)
 }
 
 func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)                 // Получаем параметры из URL
-	id, err := strconv.Atoi(vars["id"]) // Преобразуем id в число
+	vars := mux.Vars(r)                                // Получаем параметры из URL
+	fmt.Println("Полученные переменные из URL:", vars) // Логируем vars
+
+	idStr, ok := vars["id"]
+	if !ok {
+		http.Error(w, "ID не найден в URL", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("ID в виде строки:", idStr) // Логируем полученный ID
+
+	id, err := strconv.Atoi(idStr) // Преобразуем id в число
 	if err != nil {
 		http.Error(w, "Неверный формат ID", http.StatusBadRequest)
 		return
 	}
+
+	fmt.Println("ID после преобразования:", id) // Логируем преобразованный ID
 
 	// Вызываем сервис для удаления задачи
 	err = h.Service.DeleteTaskByID(uint(id))
