@@ -1,125 +1,67 @@
 package handlers
 
 import (
-	"encoding/json"
-	"firstProject/internal/taskService" // Импортируем наш сервис
-	"fmt"
-	"github.com/gorilla/mux"
-	"net/http"
-	"strconv"
+	"context"
+	"firstProject/internal/tasksService" // Импортируем наш сервис
+	"firstProject/internal/web/tasks"
 )
 
 type Handler struct {
-	Service *taskService.TaskService
+	Service *tasksService.TaskService
+}
+
+func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
+	// Получение всех задач из сервиса
+	allTasks, err := h.Service.GetAllTasks()
+	if err != nil {
+		return nil, err
+	}
+
+	// Создаем переменную респон типа 200джейсонРеспонс
+	// Которую мы потом передадим в качестве ответа
+	response := tasks.GetTasks200JSONResponse{}
+
+	// Заполняем слайс response всеми задачами из БД
+	for _, task := range allTasks {
+		task := tasks.Task{
+			Id:     &task.ID,
+			Task:   &task.Task,
+			IsDone: &task.IsDone,
+		}
+		response = append(response, task)
+	}
+
+	// САМОЕ ПРЕКРАСНОЕ. Возвращаем просто респонс и nil!
+	return response, nil
+}
+
+func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
+	// Распаковываем тело запроса напрямую, без декодера!
+	task := request.Body
+	// Обращаемся к сервису и создаем задачу
+	taskToCreate := tasksService.Task{
+		Task:   *task.Task,
+		IsDone: *task.IsDone,
+	}
+	createdTask, err := h.Service.CreateTask(taskToCreate)
+
+	if err != nil {
+		return nil, err
+	}
+	// создаем структуру респонс
+	response := tasks.PostTasks201JSONResponse{
+		Id:     &createdTask.ID,
+		Task:   &createdTask.Task,
+		IsDone: &createdTask.IsDone,
+	}
+	// Просто возвращаем респонс!
+	return response, nil
 }
 
 // Нужна для создания структуры Handler на этапе инициализации приложения
 
-func NewHandler(service *taskService.TaskService) *Handler {
+func NewHandler(service *tasksService.TaskService) *Handler {
 	return &Handler{
 		Service: service,
 	}
-}
-
-func (h *Handler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.Service.GetAllTasks()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tasks)
-}
-
-func (h *Handler) PostTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var task taskService.Task
-	err := json.NewDecoder(r.Body).Decode(&task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	createdTask, err := h.Service.CreateTask(task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(createdTask)
-}
-
-func (h *Handler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)                                // Получаем параметры из URL
-	fmt.Println("Полученные переменные из URL:", vars) // Логируем vars
-
-	idStr, ok := vars["id"]
-	if !ok {
-		http.Error(w, "ID не найден в URL", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("ID в виде строки:", idStr) // Логируем полученный ID
-
-	id, err := strconv.Atoi(idStr) // Преобразуем id в число
-	if err != nil {
-		http.Error(w, "Неверный формат ID", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("ID после преобразования:", id) // Логируем преобразованный ID
-
-	// Обработка запроса
-	var reqBody struct {
-		Task   string `json:"task,omitempty"`
-		IsDone bool   `json:"is_done,omitempty"`
-	}
-
-	err = json.NewDecoder(r.Body).Decode(&reqBody)
-	if err != nil {
-		http.Error(w, "Неверный формат JSON", http.StatusBadRequest)
-		return
-	}
-
-	updatedTask, err := h.Service.UpdateTaskByID(uint(id), taskService.Task{
-		Task:   reqBody.Task,
-		IsDone: reqBody.IsDone,
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedTask)
-}
-
-func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fmt.Println("Полученные переменные из URL:", vars)
-
-	idStr, ok := vars["id"]
-	if !ok {
-		http.Error(w, "ID не найден в URL", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("ID в виде строки:", idStr)
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Неверный формат ID", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("ID после преобразования:", id)
-
-	// Вызываем сервис для удаления задачи
-	err = h.Service.DeleteTaskByID(uint(id))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Отправляем статус 204 No Content (успешное удаление без тела ответа)
-	w.WriteHeader(http.StatusNoContent)
 }
