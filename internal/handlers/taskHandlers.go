@@ -58,6 +58,41 @@ func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObj
 	return response, nil
 }
 
+func (h *Handler) PatchTasksId(_ context.Context, request tasks.PatchTasksIdRequestObject) (tasks.PatchTasksIdResponseObject, error) {
+	id := uint(request.Id)
+	updatedTask := tasksService.Task{
+		Task:   *request.Body.Task,
+		IsDone: *request.Body.IsDone,
+	}
+
+	// Вызываем метод сервиса
+	task, err := h.Service.UpdateTaskByID(id, updatedTask)
+	if err != nil {
+		return nil, err
+	}
+
+	// Формируем ответ
+	response := tasks.PatchTasksId200JSONResponse{
+		Id:     &task.ID,
+		Task:   &task.Task,
+		IsDone: &task.IsDone,
+	}
+	return response, nil
+}
+
+func (h *Handler) DeleteTasksId(_ context.Context, request tasks.DeleteTasksIdRequestObject) (tasks.DeleteTasksIdResponseObject, error) {
+	id := uint(request.Id)
+
+	// Вызываем метод удаления из сервиса
+	err := h.Service.DeleteTaskByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Возвращаем статус 204
+	return tasks.DeleteTasksId204Response{}, nil
+}
+
 // Нужна для создания структуры Handler на этапе инициализации приложения
 
 func NewHandler(service *tasksService.TaskService) *Handler {

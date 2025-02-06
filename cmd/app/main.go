@@ -27,7 +27,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Прикол для работы в echo. Передаем и регистрируем хендлер в echo
-	strictHandler := tasks.NewStrictHandler(handler, nil) // тут будет ошибка
+	strictHandler := tasks.NewStrictHandler(handler, nil)
 	tasks.RegisterHandlers(e, strictHandler)
 
 	if err := e.Start(":8080"); err != nil {

@@ -35,7 +35,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
-
+  /tasks/{id}:
+    patch:
+      summary: Update a task by ID
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint
+      requestBody:
+        description: The task data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: The updated task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    delete:
+      summary: Delete a task by ID
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint
+      responses:
+        '204':
+          description: Task successfully deleted
 components:
   schemas:
     Task:
@@ -43,7 +82,7 @@ components:
       properties:
         id:
           type: integer
-          format: uint # так как в БД айди это только положительные числа.
+          format: uint
         task:
           type: string
         is_done:
