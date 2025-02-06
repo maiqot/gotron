@@ -25,3 +25,7 @@ run:
 gen:
 	oapi-codegen -config openapi/.openapi -include-tags tasks -package tasks openapi/openapi.yaml \
 	> ./internal/web/tasks/api.gen.go
+
+# Линтер - инструмент, который анализирует нашу кодовую базу и указывает на все места в которых есть ошибки
+lint:
+	golangci-lint run --out-format=colored-line-number
