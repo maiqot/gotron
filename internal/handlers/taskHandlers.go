@@ -4,6 +4,8 @@ import (
 	"context"
 	"firstProject/internal/tasksService" // Импортируем наш сервис
 	"firstProject/internal/web/tasks"
+	"fmt"
+	"github.com/labstack/echo/v4"
 )
 
 type Handler struct {
@@ -36,25 +38,39 @@ func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (ta
 }
 
 func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
-	// Распаковываем тело запроса напрямую, без декодера!
-	task := request.Body
-	// Обращаемся к сервису и создаем задачу
-	taskToCreate := tasksService.Task{
-		Task:   *task.Task,
-		IsDone: *task.IsDone,
-	}
-	createdTask, err := h.Service.CreateTask(taskToCreate)
+	// Отладочный вывод для проверки входных данных
+	fmt.Printf("Received Task: %+v\n", request.Body)
 
-	if err != nil {
-		return nil, err
+	// Проверка, что тело запроса не пустое
+	if request.Body == nil {
+		return nil, echo.NewHTTPError(400, "Request body is required")
 	}
-	// создаем структуру респонс
+
+	// Проверка, что поля Task и IsDone не пустые
+	if request.Body.Task == nil || request.Body.IsDone == nil {
+		return nil, echo.NewHTTPError(400, "Task and IsDone fields are required")
+	}
+
+	// Создаем задачу
+	taskToCreate := tasksService.Task{
+		Task:   *request.Body.Task,
+		IsDone: *request.Body.IsDone,
+	}
+
+	// Сохраняем задачу через сервис
+	createdTask, err := h.Service.CreateTask(taskToCreate)
+	if err != nil {
+		return nil, echo.NewHTTPError(500, "Failed to create task")
+	}
+
+	// Формируем ответ
 	response := tasks.PostTasks201JSONResponse{
 		Id:     &createdTask.ID,
 		Task:   &createdTask.Task,
 		IsDone: &createdTask.IsDone,
 	}
-	// Просто возвращаем респонс!
+
+	// Возвращаем успешный ответ
 	return response, nil
 }
 
