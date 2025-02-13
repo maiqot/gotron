@@ -2,6 +2,8 @@ package tasksService
 
 import "errors"
 
+// логика работы с задачами
+
 type TaskService struct {
 	repo TaskRepository
 }
@@ -32,4 +34,9 @@ func (s *TaskService) UpdateTaskByID(id uint, task Task) (Task, error) {
 
 func (s *TaskService) DeleteTaskByID(id uint) error {
 	return s.repo.DeleteTaskByID(id)
+}
+
+// Новый метод для получения задачи по ID
+func (s *TaskService) GetTaskByID(id uint) (Task, error) {
+	return s.repo.GetTaskByID(id)
 }

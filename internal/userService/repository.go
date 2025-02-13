@@ -2,6 +2,8 @@ package userService
 
 import "gorm.io/gorm"
 
+// репозиторий пользователей
+
 type UserRepository interface {
 	CreateUser(user User) (User, error)
 	GetAllUsers() ([]User, error)
@@ -35,13 +37,24 @@ func (r *userRepository) UpdateUserByID(id uint, updatedUser User) (User, error)
 		return user, result.Error
 	}
 
-	user.Email = updatedUser.Email
-	user.Password = updatedUser.Password
+	// Обновляем только измененные поля
+	changes := map[string]interface{}{}
+	if updatedUser.Email != "" {
+		changes["email"] = updatedUser.Email
+	}
+	if updatedUser.Password != "" {
+		changes["password"] = updatedUser.Password
+	}
 
-	r.db.Save(&user)
+	// Если изменений нет — ничего не делаем
+	if len(changes) == 0 {
+		return user, nil
+	}
+
+	r.db.Model(&user).Updates(changes)
 	return user, nil
 }
 
 func (r *userRepository) DeleteUserByID(id uint) error {
-	return r.db.Delete(&User{}, id).Error
+	return r.db.Where("id = ?", id).Delete(&User{}).Error
 }

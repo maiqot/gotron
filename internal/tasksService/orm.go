@@ -2,12 +2,13 @@ package tasksService
 
 import "gorm.io/gorm"
 
+// структура задачи
+
 type Task struct {
 	gorm.Model
-	ID     uint   `gorm:"primaryKey"`
+	UserID uint   `json:"user_id" gorm:"not null"`
 	Task   string `gorm:"not null"`
 	IsDone bool   `gorm:"default:false"`
-	UserID int    `json:"user_id" gorm:"not null"` // Добавляем связь с пользователем
 }
 
 type TaskResponse struct {

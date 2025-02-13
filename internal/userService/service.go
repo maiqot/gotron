@@ -1,10 +1,14 @@
 package userService
 
-import "firstProject/internal/tasksService"
+import (
+	"firstProject/internal/tasksService"
+	"log"
+)
 
+// логика работы с пользователями
 type UserService struct {
 	repo     UserRepository
-	taskRepo tasksService.TaskRepository // taskRepo должен реализовывать TaskRepository
+	taskRepo tasksService.TaskRepository
 }
 
 func NewUserService(repo UserRepository, taskRepo tasksService.TaskRepository) *UserService {
@@ -12,21 +16,66 @@ func NewUserService(repo UserRepository, taskRepo tasksService.TaskRepository) *
 }
 
 func (s *UserService) CreateUser(user User) (User, error) {
-	return s.repo.CreateUser(user)
+	createdUser, err := s.repo.CreateUser(user)
+	if err != nil {
+		log.Printf("Ошибка при создании пользователя: %v", err)
+	}
+	return createdUser, err
 }
 
 func (s *UserService) GetAllUsers() ([]User, error) {
-	return s.repo.GetAllUsers()
+	users, err := s.repo.GetAllUsers()
+	if err != nil {
+		log.Printf("Ошибка при получении пользователей: %v", err)
+	}
+	return users, err
 }
 
 func (s *UserService) UpdateUserByID(id uint, user User) (User, error) {
-	return s.repo.UpdateUserByID(id, user)
+	updatedUser, err := s.repo.UpdateUserByID(id, user)
+	if err != nil {
+		log.Printf("Ошибка при обновлении пользователя %d: %v", id, err)
+	}
+	return updatedUser, err
 }
 
 func (s *UserService) DeleteUserByID(id uint) error {
-	return s.repo.DeleteUserByID(id)
+	err := s.repo.DeleteUserByID(id)
+	if err != nil {
+		log.Printf("Ошибка при удалении пользователя %d: %v", id, err)
+	}
+	return err
 }
 
 func (s *UserService) GetTasksForUser(userID uint) ([]tasksService.Task, error) {
-	return s.taskRepo.GetTasksByUserID(userID) // Этот метод должен быть в TaskRepository
+	tasks, err := s.taskRepo.GetTasksByUserID(userID)
+	if err != nil {
+		log.Printf("Ошибка при получении задач пользователя %d: %v", userID, err)
+	}
+	return tasks, err
+}
+
+// Удаление всех задач пользователя
+func (s *UserService) DeleteTasksByUserID(userID uint) error {
+	tasks, err := s.taskRepo.GetTasksByUserID(userID)
+	if err != nil {
+		log.Printf("Ошибка при получении задач для удаления пользователя %d: %v", userID, err)
+		return err
+	}
+
+	if len(tasks) == 0 {
+		log.Printf("У пользователя %d нет задач для удаления", userID)
+		return nil
+	}
+
+	// Просто удаляем задачи без транзакции
+	for _, task := range tasks {
+		if err := s.taskRepo.DeleteTaskByID(task.ID); err != nil {
+			log.Printf("Ошибка при удалении задачи %d пользователя %d: %v", task.ID, userID, err)
+			return err
+		}
+	}
+
+	log.Printf("Все задачи пользователя %d удалены", userID)
+	return nil
 }

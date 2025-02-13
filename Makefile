@@ -34,3 +34,17 @@ gen-users:
 # Линтер - инструмент, который анализирует нашу кодовую базу и указывает на все места в которых есть ошибки
 lint:
 	golangci-lint run --out-format=colored-line-number
+
+.PHONY: tidy
+
+tidy:
+	# Удаляем временные файлы и директории
+	rm -rf tmp/
+	# Удаляем бинарные файлы
+	go clean
+	# Удаляем кэш модулей
+	go clean -modcache
+	# Удаляем другие временные файлы, если они есть
+	find . -name "*.test" -type f -delete
+	find . -name "*.log" -type f -delete
+	find . -name "*.tmp" -type f -delete

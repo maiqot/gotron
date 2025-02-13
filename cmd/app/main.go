@@ -15,11 +15,6 @@ import (
 func main() {
 	database.InitDB()
 
-	// Миграция моделей
-	if err := database.DB.AutoMigrate(&tasksService.Task{}, &userService.User{}); err != nil {
-		log.Fatalf("Migration failed: %v", err)
-	}
-
 	// Инициализация репозиториев
 	taskRepo := tasksService.NewTaskRepository(database.DB)
 	userRepo := userService.NewUserRepository(database.DB)
@@ -30,7 +25,7 @@ func main() {
 
 	// Инициализация хендлеров
 	taskHandler := handlers.NewHandler(taskService)
-	userHandler := handlers.NewUserHandlers(userServiceInstance)
+	userHandler := handlers.NewUserHandler(userServiceInstance)
 
 	// Инициализируем Echo
 	e := echo.New()

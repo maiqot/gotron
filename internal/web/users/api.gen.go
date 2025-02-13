@@ -13,23 +13,38 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // User defines model for User.
 type User struct {
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	DeletedAt *time.Time `json:"deleted_at"`
-	Email     *string    `json:"email,omitempty"`
-	Id        *uint      `json:"id,omitempty"`
-	Password  *string    `json:"password,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+
+	// DeletedAt Null if user is active
+	DeletedAt *time.Time           `json:"deleted_at"`
+	Email     *openapi_types.Email `json:"email,omitempty"`
+	Id        *uint                `json:"id,omitempty"`
+	Password  *string              `json:"password,omitempty"`
+	UpdatedAt *time.Time           `json:"updated_at,omitempty"`
+}
+
+// UserCreate defines model for UserCreate.
+type UserCreate struct {
+	Email    openapi_types.Email `json:"email"`
+	Password string              `json:"password"`
+}
+
+// UserUpdate defines model for UserUpdate.
+type UserUpdate struct {
+	Email    *openapi_types.Email `json:"email,omitempty"`
+	Password *string              `json:"password,omitempty"`
 }
 
 // PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
-type PostUsersJSONRequestBody = User
+type PostUsersJSONRequestBody = UserCreate
 
 // PatchUsersIdJSONRequestBody defines body for PatchUsersId for application/json ContentType.
-type PatchUsersIdJSONRequestBody = User
+type PatchUsersIdJSONRequestBody = UserUpdate
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
