@@ -12,6 +12,38 @@ type Handler struct {
 	Service *tasksService.TaskService
 }
 
+// Нужна для создания структуры Handler на этапе инициализации приложения
+
+func NewHandler(service *tasksService.TaskService) *Handler {
+	return &Handler{
+		Service: service,
+	}
+}
+
+// GetUsersIdTasks — получение задач по ID пользователя
+func (h *Handler) GetUsersIdTasks(ctx context.Context, request tasks.GetUsersIdTasksRequestObject) (tasks.GetUsersIdTasksResponseObject, error) {
+	// Получаем задачи пользователя по ID
+	userTasks, err := h.Service.GetTasksByUserID(uint(request.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	// Преобразуем задачи в формат API
+	var response tasks.GetUsersIdTasks200JSONResponse
+	for _, task := range userTasks {
+		t := tasks.Task{
+			Id:     &task.ID,
+			Task:   &task.Task,
+			IsDone: &task.IsDone,
+			UserId: &task.UserID,
+		}
+		response = append(response, t)
+	}
+
+	// Возвращаем ответ в правильном формате
+	return response, nil
+}
+
 func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (tasks.GetTasksResponseObject, error) {
 	// Получение всех задач из сервиса
 	allTasks, err := h.Service.GetAllTasks()
@@ -107,12 +139,4 @@ func (h *Handler) DeleteTasksId(_ context.Context, request tasks.DeleteTasksIdRe
 
 	// Возвращаем статус 204
 	return tasks.DeleteTasksId204Response{}, nil
-}
-
-// Нужна для создания структуры Handler на этапе инициализации приложения
-
-func NewHandler(service *tasksService.TaskService) *Handler {
-	return &Handler{
-		Service: service,
-	}
 }

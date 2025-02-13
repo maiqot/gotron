@@ -20,13 +20,16 @@ func main() {
 		log.Fatalf("Migration failed: %v", err)
 	}
 
-	// Инициализация сервисов
+	// Инициализация репозиториев
 	taskRepo := tasksService.NewTaskRepository(database.DB)
-	taskService := tasksService.NewService(taskRepo)
-	taskHandler := handlers.NewHandler(taskService)
-
 	userRepo := userService.NewUserRepository(database.DB)
-	userServiceInstance := userService.NewUserService(userRepo)
+
+	// Инициализация сервисов
+	taskService := tasksService.NewService(taskRepo)
+	userServiceInstance := userService.NewUserService(userRepo, taskRepo)
+
+	// Инициализация хендлеров
+	taskHandler := handlers.NewHandler(taskService)
 	userHandler := handlers.NewUserHandlers(userServiceInstance)
 
 	// Инициализируем Echo
@@ -34,10 +37,11 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// Регистрируем обработчики
+	// Регистрируем обработчики задач
 	strictTaskHandler := tasks.NewStrictHandler(taskHandler, nil)
 	tasks.RegisterHandlers(e, strictTaskHandler)
 
+	// Регистрируем обработчики пользователей
 	strictUserHandler := users.NewStrictHandler(userHandler, nil)
 	users.RegisterHandlers(e, strictUserHandler)
 

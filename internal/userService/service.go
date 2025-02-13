@@ -1,11 +1,14 @@
 package userService
 
+import "firstProject/internal/tasksService"
+
 type UserService struct {
-	repo UserRepository
+	repo     UserRepository
+	taskRepo tasksService.TaskRepository // taskRepo должен реализовывать TaskRepository
 }
 
-func NewUserService(repo UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo UserRepository, taskRepo tasksService.TaskRepository) *UserService {
+	return &UserService{repo: repo, taskRepo: taskRepo}
 }
 
 func (s *UserService) CreateUser(user User) (User, error) {
@@ -22,4 +25,8 @@ func (s *UserService) UpdateUserByID(id uint, user User) (User, error) {
 
 func (s *UserService) DeleteUserByID(id uint) error {
 	return s.repo.DeleteUserByID(id)
+}
+
+func (s *UserService) GetTasksForUser(userID uint) ([]tasksService.Task, error) {
+	return s.taskRepo.GetTasksByUserID(userID) // Этот метод должен быть в TaskRepository
 }

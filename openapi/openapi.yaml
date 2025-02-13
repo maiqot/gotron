@@ -28,7 +28,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Task'
+              $ref: '#/components/schemas/TaskCreate'
       responses:
         '201':
           description: The created task
@@ -54,7 +54,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Task'
+              $ref: '#/components/schemas/TaskUpdate'
       responses:
         '200':
           description: The updated task
@@ -148,6 +148,27 @@ paths:
         '204':
           description: User successfully deleted
 
+  /users/{id}/tasks:
+    get:
+      summary: Get all tasks for a specific user
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of tasks for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
 components:
   schemas:
     Task:
@@ -155,6 +176,29 @@ components:
       properties:
         id:
           type: integer
+        task:
+          type: string
+        is_done:
+          type: boolean
+        user_id:
+          type: integer
+          description: The ID of the user who owns this task
+
+    TaskCreate:
+      type: object
+      properties:
+        task:
+          type: string
+        is_done:
+          type: boolean
+          default: false
+        user_id:
+          type: integer
+          description: The ID of the user who owns this task
+
+    TaskUpdate:
+      type: object
+      properties:
         task:
           type: string
         is_done:

@@ -1,6 +1,8 @@
 package tasksService
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type TaskRepository interface {
 	// CreateTask - Передаем в функцию task типа Task из orm.go
@@ -13,6 +15,7 @@ type TaskRepository interface {
 	UpdateTaskByID(id uint, task Task) (Task, error)
 	// DeleteTaskByID - Передаем id для удаления, возвращаем только ошибку
 	DeleteTaskByID(id uint) error
+	GetTasksByUserID(userID uint) ([]Task, error)
 }
 
 type taskRepository struct {
@@ -72,4 +75,16 @@ func (r *taskRepository) DeleteTaskByID(id uint) error {
 	r.db.Delete(&task)
 
 	return nil
+}
+
+func (r *taskRepository) GetTasksByUserID(userID uint) ([]Task, error) {
+	var tasks []Task
+	err := r.db.Where("user_id = ?", userID).Find(&tasks).Error
+	return tasks, err
+}
+
+func (r *taskRepository) GetTaskByID(id uint) (Task, error) {
+	var task Task
+	err := r.db.First(&task, id).Error
+	return task, err
 }
