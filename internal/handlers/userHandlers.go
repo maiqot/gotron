@@ -5,6 +5,7 @@ import (
 	"firstProject/internal/userService"
 	"firstProject/internal/web/users"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/oapi-codegen/runtime/types"
 )
 
@@ -94,6 +95,9 @@ func (h *UserHandler) PatchUsersId(_ context.Context, request users.PatchUsersId
 // Удаление пользователя по ID
 func (h *UserHandler) DeleteUsersId(_ context.Context, request users.DeleteUsersIdRequestObject) (users.DeleteUsersIdResponseObject, error) {
 	id := uint(request.Id)
+
+	tasks, _ := h.Service.GetTasksForUser(id)
+	log.Printf("Задачи пользователя %d: %+v", id, tasks)
 
 	// Удаляем все задачи, связанные с пользователем
 	err := h.Service.DeleteTasksByUserID(id)
